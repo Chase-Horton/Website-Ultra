@@ -45,4 +45,9 @@ class App extends React.Component {
         );
     }
 }
-export default App;
+function hist(props){
+    return (
+        <App />
+    )
+}
+export default hist;
