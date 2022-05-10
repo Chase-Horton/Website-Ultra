@@ -1,11 +1,13 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material/';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Router } from 'react-router-dom';
 import React from 'react';
 
-import Home from './Home';
-import Login from './Login';
-import Register from './Register';
+import RoutesObj from '../routes/routes';
+
+
+const STORAGEKEY = 'ultra-account';
+
 const darkTheme = createTheme({
     palette: {
       mode: 'dark',
@@ -23,31 +25,35 @@ class App extends React.Component {
             isLoggedIn: false,
             account: null
         }
+        const savedAccount = localStorage.getItem(STORAGEKEY);
+        if(savedAccount !== "null"){
+            this.state.isLoggedIn = true;
+            this.state.account = JSON.parse(savedAccount);
+        }
     }
-    setAccount(account) {
+    logout = () => {
+        this.setState({
+            isLoggedIn: false,
+            account: null
+        });
+        localStorage.setItem(STORAGEKEY, null);
+    }
+    setAccount = (account) => {
         this.setState({
             account: account,
             isLoggedIn: true
-        })
+        });
+        localStorage.setItem(STORAGEKEY, JSON.stringify(account));
     }
     render() {
         return(
             <ThemeProvider theme={darkTheme}>
                 <CssBaseline />
                 <BrowserRouter>
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/login" element={<Login account={this.state.account} setAccount={this.setAccount}/>} />
-                    <Route path="/register" element={<Register />} />
-                </Routes>
+                    <RoutesObj app={this}/>
                 </BrowserRouter>
             </ThemeProvider>
         );
     }
 }
-function hist(props){
-    return (
-        <App />
-    )
-}
-export default hist;
+export default App;

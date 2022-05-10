@@ -5,21 +5,14 @@ import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
-async function handleSubmit(e, account, nav){
-    e.preventDefault();
-    //CALL API TO CHECK IF USERNAME AND PASSWORD ARE CORRECT
-    const data = await getServerAccount(account);
-    if(data.error){
-        alert(data.error);
-        nav('/')
-    }else{
-        this.setAccount(data[0]);
-        nav('/');
-    }
-}
+///CHANGE BEFORE BUILDING
+const LOCAL = true;
 async function getServerAccount(account){
     try {
-        const response = await fetch('/api/login', {
+        console.log(account)
+        //check if test version
+        const url = LOCAL ? 'http://localhost:80/api/accounts/login' : '/api/accounts/login';
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -35,12 +28,30 @@ async function getServerAccount(account){
 const Login = (props) => {
     const nav = useNavigate();
     const [account, setAccount] = useState({username:'', password:''});
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        getServerAccount(account).then(data => {
+            if(data.error){
+                alert(data.error);
+            }else{
+                //setting account in state
+                props.setAccount(data);
+                nav('/dashboard');
+            }
+        });
+    }
+    /////////////////////////////////////// maybe remove
+    /*useEffect(() => {
+        if(props.account !== null){
+            nav('/dashboard');
+        }
+    }, [props.account, nav]);*/
     return (
         <Grid container justifyContent="center" justifyItems="center">
             <Grid item sm={6} xs={6}>
                 <Paper elevation={4} style={{ padding:"10px", marginTop: '30px', background:"#001E3C", borderRadius:'10px', height:"100%", paddingLeft:'30px', paddingRight:'30px', paddingBottom:'100px'}}>
                 <h1>Login</h1>
-                <form onSubmit={(e) => handleSubmit(e, account, nav)}>
+                <form onSubmit={(e) => handleSubmit(e)}>
                     <div style={{display:"flex", justifyContent:"center"} }>
                     <TextField type="text"
                         value={account.username || ""}
