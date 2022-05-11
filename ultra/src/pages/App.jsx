@@ -3,7 +3,10 @@ import { CssBaseline } from '@mui/material/';
 import { BrowserRouter, Routes, Route, Router } from 'react-router-dom';
 import React from 'react';
 
-import RoutesObj from '../routes/routes';
+import Home from './Home';
+import Login from './Login';
+import Register from './Register';
+import Dashboard from './Dashboard';
 
 
 const STORAGEKEY = 'ultra-account';
@@ -50,7 +53,12 @@ class App extends React.Component {
             <ThemeProvider theme={darkTheme}>
                 <CssBaseline />
                 <BrowserRouter>
-                    <RoutesObj app={this}/>
+                   <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/login" element={<Login account={this.state.account} setAccount={this.setAccount}/>} />
+                        <Route path="/register" element={<Register setAccount={this.setAccount}/>} />
+                        <Route path="/dashboard" element={<Dashboard account={this.state.account} logout={this.logout}/>} />
+                   </Routes>
                 </BrowserRouter>
             </ThemeProvider>
         );
