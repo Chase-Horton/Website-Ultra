@@ -5,13 +5,11 @@ import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
-///CHANGE BEFORE BUILDING
-const LOCAL = true;
 async function getServerAccount(account){
     try {
         console.log(account)
         //check if test version
-        const url = LOCAL ? 'http://localhost:80/api/accounts/login' : '/api/accounts/login';
+        const url = '/api/accounts/login';
         const response = await fetch(url, {
             method: 'POST',
             headers: {

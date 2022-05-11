@@ -1,6 +1,7 @@
 {
   "name": "ultra",
   "homepage": "https://ultra-terminus.com/",
+  "proxy": "http://localhost:80",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

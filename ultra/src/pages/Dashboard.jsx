@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect} from "react";
-import { Button, Checkbox, Grid, Paper, TextField } from "@mui/material";
+import { Button, Grid, Paper, TextField } from "@mui/material";
+import SaveIcon from '@mui/icons-material/Save';
 
 import TodoList from "../components/TodoList.component";
 const Dashboard = (props) => {
@@ -11,12 +12,10 @@ const Dashboard = (props) => {
     //const [isLoading, setIsLoading] = useState(true);
     const [todos, setTodos] = useState([]);
     const [newTodo, setNewTodo] = useState("");
-    const [newTodoDate, setNewTodoDate] = useState(new Date());
+    const [newTodoDate, setNewTodoDate] = useState('');
     const [selectedTab, setSelectedTab] = useState("all");
 
-    //CHANGE BEFORE BUILDING
-    const LOCAL=true;
-    const url = LOCAL ? 'http://localhost:80/api/todos/' : '/api/todos/';
+    const url = '/api/todos/';
 
 
     const pushTodos = (account_id) => {
@@ -47,20 +46,26 @@ const Dashboard = (props) => {
         });
     }
     const addTodo = () => {
-        const todoText = newTodo;
-        const newTodos = [...todos, {account_id:account.id, todo_text: todoText, is_complete: 0, id: todos.length + 1, date_to_complete: newTodoDate}];
-        setNewTodo("")
-        setTodos(newTodos);
+        console.log(newTodoDate)
+        if(newTodoDate){
+            const todoText = newTodo;
+            const newTodos = [...todos, {account_id:account.id, todo_text: todoText, is_complete: 0, id: todos.length + 1, date_to_complete: newTodoDate}];
+            setNewTodo("")
+            setTodos(newTodos);
+        }else{
+            // TODO: add error message
+            alert("Please select a date");
+        }
     }
     const deleteTodo = (id) => {
         const newTodos = todos.filter(todo => todo.id !== id);
         setTodos(newTodos);
     }
-    const handleCheckChange = (e) => {
-        const todoId = e.target.id;
-        const is_complete = e.target.checked ? 1 : 0;
+    const handleCheckChange = (todoId) => {
+        const todo = todos.find(todo => todo.id === todoId);
+        const is_complete = todo.is_complete === 1 ? 0 : 1;
         const newTodos = todos.map(todo => {
-            if(String(todo.id) === todoId){
+            if(todo.id === todoId){
                 todo.is_complete = is_complete;
             }
             return todo;
@@ -77,8 +82,8 @@ const Dashboard = (props) => {
                     <form onSubmit={(e) => {e.preventDefault(); addTodo();}}>
                         <Grid container justifyContent="center">
                             <TextField label="Add Task" type="text" value={newTodo} onChange={(e) => setNewTodo(e.target.value)} required={true}/>
+                            <input style={{marginLeft:'15px'}} type={"date"} value={newTodoDate} onChange={(e) => setNewTodoDate(e.target.value)}/>
                             <Button style={{marginLeft:'15px'}}type="submit" variant="contained">Add</Button>
-                            <input type={"date"} value={newTodoDate} onChange={(e) => setNewTodoDate(e.target.value)}/>
                         </Grid>
                     </form>
                     <br />
@@ -86,9 +91,9 @@ const Dashboard = (props) => {
                     <Button onClick={() => setSelectedTab("incomplete")} disabled={selectedTab == "incomplete"}>Show Incomplete Tasks</Button>
                     <Button onClick={() => setSelectedTab("complete")} disabled={selectedTab == "complete"}>Show Complete Tasks</Button>
                     <TodoList todos={todos} handleCheckChange={handleCheckChange} display={selectedTab} delete={deleteTodo}/>
-                    <Button onClick = {() => pushTodos(account.id)}>Push Todos</Button>
+                    <Button variant="outlined" onClick = {() => pushTodos(account.id)} endIcon={<SaveIcon />}>Save Todos</Button>
                 </div>
-                    <Button onClick={() => {logout(); nav("/login");}}>Logout</Button>
+                    <Button variant="outlined" onClick={() => {logout(); nav("/login");}}>Logout</Button>
                 </Paper>
             </Grid>
         </div>

@@ -1,21 +1,22 @@
+import { List } from '@mui/material';
 import Todo from './Todo.component'
 const TodoList = (props) => {
     const todos = props.todos;
     const display = props.display;
     if(display == 'all'){
         return(
-            <ul>
+            <List>
                 {todos.map(todo => {
                     return(
                         <Todo key={todo.id} todo={todo} id={todo.id} handleCheckChange={props.handleCheckChange} delete={props.delete}/>
                     )
                 })}
-            </ul>
+            </List>
         );
     }
     else if(display == 'complete'){
         return(
-            <ul>
+            <List>
                 {todos.map(todo => {
                     if(todo.is_complete === 1){
                         return(
@@ -23,12 +24,12 @@ const TodoList = (props) => {
                         );
                     }
                 })}
-            </ul>
+            </List>
         );
     }
     else if(display == 'incomplete'){
         return(
-            <ul>
+            <List>
                 {todos.map(todo => {
                     if(todo.is_complete === 0){
                         return(
@@ -36,7 +37,7 @@ const TodoList = (props) => {
                         );
                     }
                 })}
-            </ul>
+            </List>
         );
     }
 }
