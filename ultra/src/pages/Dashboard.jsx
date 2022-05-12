@@ -46,10 +46,9 @@ const Dashboard = (props) => {
         });
     }
     const addTodo = () => {
-        console.log(newTodoDate)
         if(newTodoDate){
             const todoText = newTodo;
-            const newTodos = [...todos, {account_id:account.id, todo_text: todoText, is_complete: 0, id: todos.length + 1, date_to_complete: newTodoDate}];
+            const newTodos = [...todos, {account_id:account.id, text: todoText, is_complete: 0, id: todos.length + 1, date_to_complete: newTodoDate}];
             setNewTodo("")
             setTodos(newTodos);
         }else{

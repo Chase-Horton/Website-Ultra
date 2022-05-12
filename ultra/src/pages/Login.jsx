@@ -7,7 +7,6 @@ import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 async function getServerAccount(account){
     try {
-        console.log(account)
         //check if test version
         const url = '/api/accounts/login';
         const response = await fetch(url, {
