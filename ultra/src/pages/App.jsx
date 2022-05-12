@@ -2,6 +2,8 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material/';
 import { BrowserRouter, Routes, Route, Router } from 'react-router-dom';
 import React from 'react';
+import Nav from '../components/Nav.component';
+
 
 import RouterObj from '../routes/routes';
 
@@ -49,6 +51,7 @@ class App extends React.Component {
             <ThemeProvider theme={darkTheme}>
                 <CssBaseline />
                 <BrowserRouter>
+                    <Nav logout={this.logout}/>
                     <RouterObj app={this} />
                 </BrowserRouter>
             </ThemeProvider>
