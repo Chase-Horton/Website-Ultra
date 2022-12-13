@@ -1,6 +1,7 @@
 from skyfield.api import load, wgs84
 from skyfield.data import hipparcos
 from StarSelector import StarSelector
+from PlanetSelector import PlanetSelector
 from GridPlotter import GridPlotter
 from datetime import datetime
 import pygame, sys
@@ -11,10 +12,11 @@ myfont = pygame.font.SysFont("monospace", 32)
 class GraphController:
     def __init__(self):
         #STATEFUL
+        self.planetPlotterEnabled = False
         self.graphStateIndex = 6
         self.constellationCatalog = ['none', 'Ori', 'UMa', 'UMi', 'Dra', 'Cas']
         self.constellationCatalogIndex = 0
-        self.filter = 7
+        self.filter = 2.5
         #CONST
         size = 3840, 2160
         self.screen = pygame.display.set_mode(size, display=1)
@@ -35,6 +37,8 @@ class GraphController:
         self.df = self.df[self.df['ra_degrees'].notnull()]
         #create star selector object
         self.Selector = StarSelector(self.df)
+        #create planet selector object
+        self.PlanetSelector = PlanetSelector()
         #create grid controller
         self.GridPlotter = GridPlotter(self.screen, 115)
     #select stars filtering by selected magnitude
@@ -53,7 +57,7 @@ class GraphController:
             self.constellationCatalogIndex = len(self.constellationCatalog) - 1
         elif self.constellationCatalogIndex >= len(self.constellationCatalog):
             self.constellationCatalogIndex = 0
-        self.fastDrawStars()
+        self.fastRefresh()
     #update GraphStateIndex
     def updateGraphStateIndex(self, i):
         self.graphStateIndex += i
@@ -61,7 +65,7 @@ class GraphController:
             self.graphStateIndex = 0
         elif self.graphStateIndex > 6:
             self.graphStateIndex = 6
-        self.fastDrawStars()
+        self.fastRefresh()
     #redraw graph then stars based on state values
     def drawStars(self):
         #draw graph and lines and labels
@@ -73,6 +77,10 @@ class GraphController:
         #selection constellation
         elif "byConst" == "TBA":
             pass
+    #draw planets 
+    def drawPlanets(self):
+        self.currPlanets = self.PlanetSelector.getVisiblePlanets(self.time, self.location)
+        self.GridPlotter.plotPlanetList(self.currPlanets)
     #draw stars with threading
     def drawStarsWithThread(self):
         #draw graph and lines and labels
@@ -87,11 +95,15 @@ class GraphController:
     def fastDrawStars(self):
         self.GridPlotter.update(self.graphStateIndex)
         self.GridPlotter.plotStarList(self.currStars, self.constellationCatalog[self.constellationCatalogIndex])
-    def findStar(self, loc):
+    def findStarOrPlanet(self, loc):
         for star in self.currStars:
             dist = math.sqrt((loc[0] - star.loc[0]) ** 2 + (loc[1] - star.loc[1]) ** 2)
             if dist < star.normMagnitude*8 + 2:
                 return star
+        for planet in self.currPlanets:
+            dist = math.sqrt((loc[0] - planet.loc[0]) ** 2 + (loc[1] - planet.loc[1]) ** 2)
+            if dist < planet.normMagnitude*12 + 2:
+                return planet
         return None
     def selectStar(self, star):
         if star == None:
@@ -113,15 +125,15 @@ class GraphController:
     # update location with new lat long
     def updateLocation(self, lat, long ,elev=0):
         self.location = self.earth + wgs84.latlon(lat, long, elev)
-        self.drawStarsWithThread()
+        self.refresh()
     #update filter value and redraw stars
     def updateFilter(self, i):
         self.filter += i
-        self.drawStarsWithThread()
+        self.refresh()
     #update time and redraw stars
     def updateTime(self, i):
         self.time += i
-        self.drawStarsWithThread()
+        self.refresh()
     #update info text
     def updateInfoText(self):
         label = myfont.render('Showing Stars brighter than Magnitude: {:.1f}'.format(self.filter), 1, (255,255,0))
@@ -134,6 +146,21 @@ class GraphController:
         self.screen.blit(label, (2800, 140))
         label = myfont.render(f'Selected Time: {self.time.utc_strftime()}', 1, (255,255,0))
         self.screen.blit(label, (2900, 180))
+    #toggle planet plotter
+    def togglePlanetPlotter(self):
+        self.planetPlotterEnabled = not self.planetPlotterEnabled
+        self.refresh()
+    def refresh(self):
+        self.drawStars()
+        if self.planetPlotterEnabled:
+            self.drawPlanets()
+    def fastRefresh(self):
+        self.fastDrawStars()
+        if self.planetPlotterEnabled:
+            self.drawPlanets()
+
+
+
 G = GraphController()
 start = datetime.now()
 G.drawStars()
@@ -159,12 +186,14 @@ while True:
             elif event.key == K_x:
                 G.updateGraphStateIndex(1)
             elif event.key == K_e:
-                G.updateTime(10)
+                G.updateTime(1)
             elif event.key == K_q:
                 G.updateTime(-1)
+            elif event.key == K_p:
+                G.togglePlanetPlotter()
         elif event.type == MOUSEBUTTONDOWN:
             G.fastDrawStars()
-            star = G.findStar(pygame.mouse.get_pos())
+            star = G.findStarOrPlanet(pygame.mouse.get_pos())
             G.selectStar(star)
 
             

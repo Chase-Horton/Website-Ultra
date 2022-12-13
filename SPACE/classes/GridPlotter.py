@@ -118,6 +118,17 @@ class GridPlotter:
             ang = self.calcPointOnCircle(az, self.PPI*rad)
             star.setLoc(ang)
             pygame.draw.circle(self.screen, color, ang, 8*star.normMagnitude + 2)
+    
+    def plotPlanetList(self, list):
+        for planet in list:
+            self.plotPlanet(planet)
+
+    def plotPlanet(self, planet, color=[255,165,0]):
+        rad = 9 - (planet.alt / 10.0)
+        az = planet.az
+        ang = self.calcPointOnCircle(az, self.PPI*rad)
+        planet.setLoc(ang)
+        pygame.draw.circle(self.screen, color, ang, 12*planet.normMagnitude + 2)
             
     def update(self, state):
         self.screen.fill([0,0,0])
