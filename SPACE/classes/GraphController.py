@@ -2,7 +2,7 @@ from skyfield.api import load, wgs84
 from skyfield.data import hipparcos
 from StarSelector import StarSelector
 from GridPlotter import GridPlotter
-from datetime import timedelta
+from datetime import datetime
 import pygame, sys
 from pygame.locals import *
 import math
@@ -46,14 +46,6 @@ class GraphController:
     #add stars by list of constellation symbols to list of stars
     def addStarsByConst(self, consts, starList):
         return self.Selector.selectStarsByConstellations(self.time, self.location, consts, starList)
-    # update location with new lat long
-    def updateLocation(self, lat, long ,elev=0):
-        self.location = self.earth + wgs84.latlon(lat, long, elev)
-        self.drawStars()
-    #update filter value and redraw stars
-    def updateFilter(self, i):
-        self.filter += i
-        self.drawStars()
     #update selected constellation index
     def updateConstellationIndex(self, i):
         self.constellationCatalogIndex += i
@@ -77,6 +69,17 @@ class GraphController:
         #!selection magnitude add more options later
         if "mag" == "mag":
             self.currStars = self.selectStarsByMag()
+            self.GridPlotter.plotStarList(self.currStars, self.constellationCatalog[self.constellationCatalogIndex])
+        #selection constellation
+        elif "byConst" == "TBA":
+            pass
+    #draw stars with threading
+    def drawStarsWithThread(self):
+        #draw graph and lines and labels
+        self.GridPlotter.update(self.graphStateIndex)
+        #!selection magnitude add more options later
+        if "mag" == "mag":
+            self.currStars = self.Selector.selectStarsByMagnitudeWithBatching(self.filter, self.time, self.location)
             self.GridPlotter.plotStarList(self.currStars, self.constellationCatalog[self.constellationCatalogIndex])
         #selection constellation
         elif "byConst" == "TBA":
@@ -107,9 +110,19 @@ class GraphController:
                 label = myfont.render(txt, 1, (255,255,0))
                 self.screen.blit(label, (100, 100 + offset))
                 offset += 40
+    # update location with new lat long
+    def updateLocation(self, lat, long ,elev=0):
+        self.location = self.earth + wgs84.latlon(lat, long, elev)
+        self.drawStarsWithThread()
+    #update filter value and redraw stars
+    def updateFilter(self, i):
+        self.filter += i
+        self.drawStarsWithThread()
+    #update time and redraw stars
     def updateTime(self, i):
         self.time += i
-        self.drawStars()
+        self.drawStarsWithThread()
+    #update info text
     def updateInfoText(self):
         label = myfont.render('Showing Stars brighter than Magnitude: {:.1f}'.format(self.filter), 1, (255,255,0))
         self.screen.blit(label, (2700, 100))
@@ -122,7 +135,10 @@ class GraphController:
         label = myfont.render(f'Selected Time: {self.time.utc_strftime()}', 1, (255,255,0))
         self.screen.blit(label, (2900, 180))
 G = GraphController()
+start = datetime.now()
 G.drawStars()
+end = datetime.now()
+print('Time to draw stars: ', end - start)
 while True:
     pygame.display.update()
     G.updateInfoText()
