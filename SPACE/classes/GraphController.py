@@ -12,6 +12,8 @@ myfont = pygame.font.SysFont("monospace", 32)
 class GraphController:
     def __init__(self):
         #STATEFUL
+        self.currPlanets = []
+        self.currStars = []
         self.planetPlotterEnabled = False
         self.graphStateIndex = 6
         self.constellationCatalog = ['none', 'Ori', 'UMa', 'UMi', 'Dra', 'Cas']
@@ -105,12 +107,15 @@ class GraphController:
             if dist < planet.normMagnitude*12 + 2:
                 return planet
         return None
-    def selectStar(self, star):
-        if star == None:
+    def selectStarOrPlanet(self, starOrPlanet):
+        if self.planetPlotterEnabled:
+            self.drawPlanets()
+        if starOrPlanet == None:
             label = myfont.render('No Star Found', 1, (255,255,0))
             self.screen.blit(label, (100, 100))
             return
-        else:
+        elif starOrPlanet.type == 'star':
+            star = starOrPlanet
             #recolor star
             self.GridPlotter.plotStar(star, [255, 255, 0])
             #print info
@@ -122,6 +127,20 @@ class GraphController:
                 label = myfont.render(txt, 1, (255,255,0))
                 self.screen.blit(label, (100, 100 + offset))
                 offset += 40
+            return
+        elif starOrPlanet.type == 'planet':
+            planet = starOrPlanet
+            #recolor planet
+            self.GridPlotter.plotPlanet(planet, [255, 255, 0])
+            #print info
+            dist = 'Distance: {:,.2f} km '.format(planet.distance.km) + '| {:,.2f} ly'.format(planet.distance.m/9460730472580800)
+            infoLst = [f'Name: {planet.name}', f'Magnitude: {planet.magnitude}', dist,'Azimuth: {:.2f}'.format(planet.az), 'Altitude: {:.2f}'.format(planet.alt)]
+            offset = 0
+            for txt in infoLst:
+                label = myfont.render(txt, 1, (255,255,0))
+                self.screen.blit(label, (100, 100 + offset))
+                offset += 40
+            return
     # update location with new lat long
     def updateLocation(self, lat, long ,elev=0):
         self.location = self.earth + wgs84.latlon(lat, long, elev)
@@ -193,7 +212,7 @@ while True:
                 G.togglePlanetPlotter()
         elif event.type == MOUSEBUTTONDOWN:
             G.fastDrawStars()
-            star = G.findStarOrPlanet(pygame.mouse.get_pos())
-            G.selectStar(star)
+            starOrPlanet = G.findStarOrPlanet(pygame.mouse.get_pos())
+            G.selectStarOrPlanet(starOrPlanet)
 
             
