@@ -1,5 +1,5 @@
 from skyfield.api import load, wgs84
-from Planet import Planet
+from data.Planet import Planet
 import pandas as pd
 from util import normalizeListMagnitudes
 class PlanetSelector:

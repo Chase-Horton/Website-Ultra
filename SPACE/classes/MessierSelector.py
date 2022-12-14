@@ -1,5 +1,5 @@
 import pandas as pd
-from MessierObj import Messier
+from data.MessierObj import Messier
 from skyfield.api import Star, load, wgs84
 from util import normalizeListMagnitudes
 class MessierSelector:

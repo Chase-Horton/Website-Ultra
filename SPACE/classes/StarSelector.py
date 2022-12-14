@@ -1,5 +1,5 @@
 from skyfield.api import Star as SkyStar
-from Star import Star
+from data.Star import Star
 import threading
 import queue
 from util import normalizeListMagnitudes
