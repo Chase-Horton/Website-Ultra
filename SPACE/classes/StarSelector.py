@@ -40,7 +40,7 @@ class StarSelector:
         start = string.index(symbol) + 1
         end = string.index(symbol, start)
         return string[start:end]
-
+    #! NEED TO RETURN NONE IF NONE ARE FOUND
     def selectStarByNameOrId(self, nameOrId, location, time):
         tempStars = self.df
         if not nameOrId.isdigit():

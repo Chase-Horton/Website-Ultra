@@ -14,6 +14,7 @@ class GraphController:
     def __init__(self):
         #STATEFUL
         self.selectedSearchObject = None
+        self.selectedMousePlanet = None
         self.currPlanets = []
         self.currStars = []
         self.currMessier = []
@@ -216,7 +217,6 @@ class GraphController:
         # first check if it is a planet we are displaying
         for planet in self.currPlanets:
             if planet.name == name:
-                print('Found on screen')
                 return planet
         # then check if it is a planet we are not displaying
         if name in self.PlanetSelector.planetList:
@@ -225,13 +225,10 @@ class GraphController:
         for messier in self.currMessier:
             if messier.NGCNames != None:
                 if name in messier.NGCNames:
-                    print('Found on screen')
                     return messier
             if name == messier.MCode:
-                print('Found on screen')
                 return messier
             if name == messier.NGC:
-                print('Found on screen')
                 return messier
         # then check if it is a messier object we are not displaying
         messierObjects = self.MessierSelector.getAllMessierObjects(self.time, self.location)
@@ -252,12 +249,7 @@ class GraphController:
                 foundStar = star
                 return star
         if foundStar != None:
-            if foundStar.alt > 0:
-                print('Found on screen')
-                return foundStar
-            else:
-                print('Star is below horizon')
-                return foundStar
+            return foundStar
         else:
             #resolution too low
             return self.Selector.selectStarByNameOrId(name, self.location, self.time)
@@ -267,6 +259,11 @@ class GraphController:
             newObj = self.searchObject(self.selectedSearchObject.name)
             self.selectedSearchObject = newObj
             self.selectStarOrPlanet(newObj, [255, 0, 0], [2950, 1500])
+    def refreshSelectedMousePlanet(self):
+        if self.selectedMousePlanet != None:
+            newObj = self.searchObject(self.selectedMousePlanet.name)
+            self.selectedMousePlanet = newObj
+            self.selectStarOrPlanet(self.selectedMousePlanet)
     def refresh(self):
         #draw graph and lines and labels
         self.GridPlotter.update(self.graphStateIndex)
@@ -279,6 +276,8 @@ class GraphController:
             self.drawPlanets()
         #draw search object over planets
         self.refreshSearchObjectAndData()
+        #draw selected mouse planet over search objects
+        self.refreshSelectedMousePlanet()
     def fastRefresh(self):
         #draw graph and lines and labels
         self.GridPlotter.update(self.graphStateIndex)
@@ -288,6 +287,7 @@ class GraphController:
         if self.planetPlotterEnabled:
             self.drawPlanets()
         self.refreshSearchObjectAndData()
+        self.refreshSelectedMousePlanet()
     def handleKeys(self, events):
         for event in events:
             if(event.type == KEYDOWN):
@@ -317,9 +317,10 @@ class GraphController:
                     self.selectedSearchObject = self.searchObject('Sabik')
                     self.fastRefresh()
             elif event.type == MOUSEBUTTONDOWN:
-                self.fastDrawStars()
-                starOrPlanet = self.findStarOrPlanet(pygame.mouse.get_pos())
+                self.selectedMousePlanet = None
                 self.fastRefresh()
-                self.selectStarOrPlanet(starOrPlanet)
+                self.selectedMousePlanet = self.findStarOrPlanet(pygame.mouse.get_pos())
+                self.selectStarOrPlanet(self.selectedMousePlanet)
+                
 
             
