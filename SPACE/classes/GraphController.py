@@ -13,6 +13,7 @@ myfont = pygame.font.SysFont("monospace", 32)
 class GraphController:
     def __init__(self):
         #STATEFUL
+        self.selectedSearchObject = None
         self.currPlanets = []
         self.currStars = []
         self.currMessier = []
@@ -113,46 +114,48 @@ class GraphController:
             if dist < messierObject.normMagnitude*12 + 2:
                 return messierObject
         return None
-    def selectStarOrPlanet(self, starOrPlanet):
-        self.fastRefresh()
+    #!TODO:save infolst and offsets for between refreshes
+    def selectStarOrPlanet(self, starOrPlanet, color=[255, 255, 0], position = [100, 100]):
         if starOrPlanet == None:
-            label = myfont.render('No Star Found', 1, (255,255,0))
-            self.screen.blit(label, (100, 100))
+            label = myfont.render('No Star Found', 1, color)
+            self.screen.blit(label, position)
             return
-        elif starOrPlanet.type == 'star':
+        elif starOrPlanet.objType == 'star':
             star = starOrPlanet
             #recolor star
-            self.GridPlotter.plotStar(star, [255, 255, 0])
+            self.GridPlotter.plotStar(star, color)
             #print info
             dist = 'Distance: {:,.2f} AU '.format(star.distance.au) + '| {:,.2f} ly'.format(star.distance.m/9460730472580800)
             infoLst = [f'HYG ID: {star.ID}', f'Name: {star.name}', f'Magnitude: {star.magnitude}', dist, f'Member of Constellation: {star.constellation} | {star.symbol}',
-            'Azimuth: {:.2f}'.format(star.az), 'Altitude: {:.2f}'.format(star.alt)]
+            'Azimuth: {:.2f}°'.format(star.az), 'Altitude: {:.2f}°'.format(star.alt)]
             offset = 0
             for txt in infoLst:
-                label = myfont.render(txt, 1, (255,255,0))
-                self.screen.blit(label, (100, 100 + offset))
+                label = myfont.render(txt, 1, color)
+                self.screen.blit(label, (position[0], position[1] + offset))
                 offset += 40
             return
-        elif starOrPlanet.type == 'planet':
+        elif starOrPlanet.objType == 'planet':
             planet = starOrPlanet
             #recolor planet
-            self.GridPlotter.plotPlanet(planet, [255, 255, 0])
+            if planet.alt > 0:
+                self.GridPlotter.plotPlanet(planet, color)
             #print info
             dist = 'Distance: {:,.2f} km '.format(planet.distance.km) + '| {:,.2f} ly'.format(planet.distance.m/9460730472580800)
-            infoLst = [f'Name: {planet.name}', f'Magnitude: {planet.magnitude}', dist,'Azimuth: {:.2f}'.format(planet.az),
-                'Altitude: {:.2f}'.format(planet.alt), 'Mass: {:,.2f} kg'.format(planet.mass1024*1024), 'Diameter: {:,.2f} km'.format(planet.diameter),
+            infoLst = [f'Name: {planet.name}', f'Magnitude: {planet.magnitude}', dist,'Azimuth: {:.2f}°'.format(planet.az),
+                'Altitude: {:.2f}°'.format(planet.alt), 'Mass: {:,.2f} kg'.format(planet.mass1024*1024), 'Diameter: {:,.2f} km'.format(planet.diameter),
                  'Density: {:,.2f} kg/m^3'.format(planet.density), 'Gravity: {:,.2f} m/s^2'.format(planet.gravity),
                   'Average Temperature: {:,.2f} C'.format(planet.avgTemp), 'Number of Moons {}'.format(planet.numMoons)]
             offset = 0
             for txt in infoLst:
-                label = myfont.render(txt, 1, (255,255,0))
-                self.screen.blit(label, (100, 100 + offset))
+                label = myfont.render(txt, 1, color)
+                self.screen.blit(label, (position[0], position[1] + offset))
                 offset += 40
             return
         else:
-            messier = starOrPlanet
+            if messier.alt > 0:
+                messier = starOrPlanet
             #recolor messier
-            self.GridPlotter.plotPlanet(messier, [255, 255, 0])
+            self.GridPlotter.plotPlanet(messier, color)
             #print info
             designation = f'Messier #: {messier.MCode}'
             NGC = f'NGC #: {messier.NGC}'
@@ -165,14 +168,14 @@ class GraphController:
             yearDiscovered = 'Year Discovered: {:,.0f}'.format(messier.yearDiscovered)
 
             magnitude = 'Magnitude: {:.2f}'.format(messier.magnitude)
-            alt = 'Altitude: {:.2f}'.format(messier.alt)
-            az = 'Azimuth: {:.2f}'.format(messier.az)
+            alt = 'Altitude: {:.2f}°'.format(messier.alt)
+            az = 'Azimuth: {:.2f}°'.format(messier.az)
             distance = 'Distance: {:,.2f} ly'.format(messier.distance)
             infoLst = [designation, NGC, name, constellation, mType, yearDiscovered, magnitude, alt, az, distance]
             offset = 0
             for txt in infoLst:
-                label = myfont.render(txt, 1, (255,255,0))
-                self.screen.blit(label, (100, 100 + offset))
+                label = myfont.render(txt, 1, color)
+                self.screen.blit(label, (position[0], position[1] + offset))
                 offset += 40
             return
             
@@ -258,7 +261,12 @@ class GraphController:
         else:
             #resolution too low
             return self.Selector.selectStarByNameOrId(name, self.location, self.time)
-
+    def refreshSearchObjectAndData(self):
+        if self.selectedSearchObject != None:
+            #update info on search object in bottom right
+            newObj = self.searchObject(self.selectedSearchObject.name)
+            self.selectedSearchObject = newObj
+            self.selectStarOrPlanet(newObj, [255, 0, 0], [2950, 1500])
     def refresh(self):
         #draw graph and lines and labels
         self.GridPlotter.update(self.graphStateIndex)
@@ -269,6 +277,8 @@ class GraphController:
         #draw planets over stars
         if self.planetPlotterEnabled:
             self.drawPlanets()
+        #draw search object over planets
+        self.refreshSearchObjectAndData()
     def fastRefresh(self):
         #draw graph and lines and labels
         self.GridPlotter.update(self.graphStateIndex)
@@ -277,6 +287,7 @@ class GraphController:
         self.fastDrawStars()
         if self.planetPlotterEnabled:
             self.drawPlanets()
+        self.refreshSearchObjectAndData()
     def handleKeys(self, events):
         for event in events:
             if(event.type == KEYDOWN):
@@ -303,10 +314,12 @@ class GraphController:
                 elif event.key == K_m:
                     self.toggleMessierPlotter()
                 elif event.key == K_i:
-                    print(self.searchObject('Sabik').alt)
+                    self.selectedSearchObject = self.searchObject('Sabik')
+                    self.fastRefresh()
             elif event.type == MOUSEBUTTONDOWN:
                 self.fastDrawStars()
                 starOrPlanet = self.findStarOrPlanet(pygame.mouse.get_pos())
+                self.fastRefresh()
                 self.selectStarOrPlanet(starOrPlanet)
 
             

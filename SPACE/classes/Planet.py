@@ -2,7 +2,7 @@ class Planet:
     def __init__(self, id, name, alt, az, dist, magnitude, planetObj, mass, diameter, density, gravity, escape, rotation, avgTemp, numMoons, rings):
         self.loc = []
         self.name = name
-        self.type = 'planet'
+        self.objType = 'planet'
         self.ID = id
         self.magnitude = magnitude
         self.az = az.degrees

@@ -2,7 +2,7 @@ class Star:
     def __init__(self, id, name, constellation, symbol, mag, alt, az, dist, starObj):
         self.loc = []
         self.name = name
-        self.type = 'star'
+        self.objType = 'star'
         self.constellation = constellation
         self.symbol = symbol
         self.ID = id
