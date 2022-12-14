@@ -15,6 +15,7 @@ class GraphController:
         #STATEFUL
         self.currPlanets = []
         self.currStars = []
+        self.currMessier = []
         self.planetPlotterEnabled = False
         self.messierPlotterEnabled = False
         self.graphStateIndex = 6
@@ -107,10 +108,13 @@ class GraphController:
             dist = math.sqrt((loc[0] - planet.loc[0]) ** 2 + (loc[1] - planet.loc[1]) ** 2)
             if dist < planet.normMagnitude*12 + 2:
                 return planet
+        for messierObject in self.currMessier:
+            dist = math.sqrt((loc[0] - messierObject.loc[0]) ** 2 + (loc[1] - messierObject.loc[1]) ** 2)
+            if dist < messierObject.normMagnitude*12 + 2:
+                return messierObject
         return None
     def selectStarOrPlanet(self, starOrPlanet):
-        if self.planetPlotterEnabled:
-            self.drawPlanets()
+        self.fastRefresh()
         if starOrPlanet == None:
             label = myfont.render('No Star Found', 1, (255,255,0))
             self.screen.blit(label, (100, 100))
@@ -145,6 +149,34 @@ class GraphController:
                 self.screen.blit(label, (100, 100 + offset))
                 offset += 40
             return
+        else:
+            messier = starOrPlanet
+            #recolor messier
+            self.GridPlotter.plotPlanet(messier, [255, 255, 0])
+            #print info
+            designation = f'Messier #: {messier.MCode}'
+            NGC = f'NGC #: {messier.NGC}'
+            if messier.NGCNames == None:
+                name = 'Other Names: N/A'
+            else:
+                name = f'Other Names: {messier.NGCNames}'
+            constellation = f'Constellation: {messier.constellation}'
+            mType = f'Type: {messier.type}'
+            yearDiscovered = 'Year Discovered: {:,.0f}'.format(messier.yearDiscovered)
+
+            magnitude = 'Magnitude: {:.2f}'.format(messier.magnitude)
+            alt = 'Altitude: {:.2f}'.format(messier.alt)
+            az = 'Azimuth: {:.2f}'.format(messier.az)
+            distance = 'Distance: {:,.2f} ly'.format(messier.distance)
+            infoLst = [designation, NGC, name, constellation, mType, yearDiscovered, magnitude, alt, az, distance]
+            offset = 0
+            for txt in infoLst:
+                label = myfont.render(txt, 1, (255,255,0))
+                self.screen.blit(label, (100, 100 + offset))
+                offset += 40
+            return
+            
+            
     # update location with new lat long
     def updateLocation(self, lat, long ,elev=0):
         self.location = self.earth + wgs84.latlon(lat, long, elev)

@@ -11,8 +11,8 @@ class Messier:
             Dec.append(float(0))
             self.ra = RA
             self.dec = Dec
-        self.magnitude = Mag
-        self.distance = distance
+        self.magnitude = float(Mag)
+        self.distance = float(distance)
         self.size = Size
         self.type = Type
         self.constellation = Constellation
