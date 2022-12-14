@@ -122,7 +122,9 @@ class GridPlotter:
     def plotPlanetList(self, list):
         for planet in list:
             self.plotPlanet(planet)
-
+    def plotMessierList(self, list):
+        for messier in list:
+            self.plotPlanet(messier, [255,0,255])
     def plotPlanet(self, planet, color=[255,165,0]):
         rad = 9 - (planet.alt / 10.0)
         az = planet.az

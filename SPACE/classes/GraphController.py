@@ -2,6 +2,7 @@ from skyfield.api import load, wgs84
 from skyfield.data import hipparcos
 from StarSelector import StarSelector
 from PlanetSelector import PlanetSelector
+from MessierSelector import MessierSelector
 from GridPlotter import GridPlotter
 from datetime import datetime
 import pygame, sys
@@ -15,6 +16,7 @@ class GraphController:
         self.currPlanets = []
         self.currStars = []
         self.planetPlotterEnabled = False
+        self.messierPlotterEnabled = False
         self.graphStateIndex = 6
         self.constellationCatalog = ['none', 'Ori', 'UMa', 'UMi', 'Dra', 'Cas']
         self.constellationCatalogIndex = 0
@@ -37,10 +39,10 @@ class GraphController:
 
         #remove missing pos
         self.df = self.df[self.df['ra_degrees'].notnull()]
-        #create star selector object
+        #create star, planet, and messier selector object
         self.Selector = StarSelector(self.df)
-        #create planet selector object
         self.PlanetSelector = PlanetSelector()
+        self.MessierSelector = MessierSelector()
         #create grid controller
         self.GridPlotter = GridPlotter(self.screen, 115)
     #select stars filtering by selected magnitude
@@ -70,8 +72,6 @@ class GraphController:
         self.fastRefresh()
     #redraw graph then stars based on state values
     def drawStars(self):
-        #draw graph and lines and labels
-        self.GridPlotter.update(self.graphStateIndex)
         #!selection magnitude add more options later
         if "mag" == "mag":
             self.currStars = self.selectStarsByMag()
@@ -83,10 +83,12 @@ class GraphController:
     def drawPlanets(self):
         self.currPlanets = self.PlanetSelector.getVisiblePlanets(self.time, self.location)
         self.GridPlotter.plotPlanetList(self.currPlanets)
+    #draw messier objects
+    def drawMessier(self):
+        self.currMessier = self.MessierSelector.getVisibleMessierObjects(self.time, self.location)
+        self.GridPlotter.plotMessierList(self.currMessier)  
     #draw stars with threading
     def drawStarsWithThread(self):
-        #draw graph and lines and labels
-        self.GridPlotter.update(self.graphStateIndex)
         #!selection magnitude add more options later
         if "mag" == "mag":
             self.currStars = self.Selector.selectStarsByMagnitudeWithBatching(self.filter, self.time, self.location)
@@ -95,7 +97,6 @@ class GraphController:
         elif "byConst" == "TBA":
             pass
     def fastDrawStars(self):
-        self.GridPlotter.update(self.graphStateIndex)
         self.GridPlotter.plotStarList(self.currStars, self.constellationCatalog[self.constellationCatalogIndex])
     def findStarOrPlanet(self, loc):
         for star in self.currStars:
@@ -172,11 +173,24 @@ class GraphController:
     def togglePlanetPlotter(self):
         self.planetPlotterEnabled = not self.planetPlotterEnabled
         self.refresh()
+    def toggleMessierPlotter(self):
+        self.messierPlotterEnabled = not self.messierPlotterEnabled
+        self.refresh()
     def refresh(self):
+        #draw graph and lines and labels
+        self.GridPlotter.update(self.graphStateIndex)
+        if self.messierPlotterEnabled:
+            self.drawMessier()
+        #draw stars over messier
         self.drawStars()
+        #draw planets over stars
         if self.planetPlotterEnabled:
             self.drawPlanets()
     def fastRefresh(self):
+        #draw graph and lines and labels
+        self.GridPlotter.update(self.graphStateIndex)
+        if self.messierPlotterEnabled:
+            self.drawMessier()
         self.fastDrawStars()
         if self.planetPlotterEnabled:
             self.drawPlanets()
@@ -185,7 +199,7 @@ class GraphController:
 
 G = GraphController()
 start = datetime.now()
-G.drawStars()
+G.refresh()
 end = datetime.now()
 print('Time to draw stars: ', end - start)
 while True:
@@ -213,6 +227,8 @@ while True:
                 G.updateTime(-1)
             elif event.key == K_p:
                 G.togglePlanetPlotter()
+            elif event.key == K_m:
+                G.toggleMessierPlotter()
         elif event.type == MOUSEBUTTONDOWN:
             G.fastDrawStars()
             starOrPlanet = G.findStarOrPlanet(pygame.mouse.get_pos())
