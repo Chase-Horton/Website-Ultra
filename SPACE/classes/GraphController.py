@@ -4,7 +4,7 @@ from StarSelector import StarSelector
 from PlanetSelector import PlanetSelector
 from MessierSelector import MessierSelector
 from GridPlotter import GridPlotter
-from datetime import datetime
+from pytz import timezone
 import pygame, sys
 from pygame.locals import *
 import math
@@ -25,6 +25,7 @@ class GraphController:
         self.constellationCatalogIndex = 0
         self.filter = 2.5
         #CONST
+        self.CENTRALTIME = timezone('US/Central')
         size = 3840, 2160
         self.screen = pygame.display.set_mode(size, display=1)
         self.ts = load.timescale()
@@ -203,7 +204,11 @@ class GraphController:
             constell = 'None'
         label = myfont.render(f'Selected Constellation: {constell}', 1, (255,255,0))
         self.screen.blit(label, (2800, 140))
-        label = myfont.render(f'Selected Time: {self.time.utc_strftime()}', 1, (255,255,0))
+        time = str(str(self.time.astimezone(self.CENTRALTIME)))
+        time = time.split(':')
+        time = time[:2]
+        time = ':'.join(time)
+        label = myfont.render(f'Selected Time CST: {time}', 1, (255,255,0))
         self.screen.blit(label, (2900, 180))
     #toggle planet plotter
     def togglePlanetPlotter(self):
@@ -306,9 +311,9 @@ class GraphController:
                 elif event.key == K_x:
                     self.updateGraphStateIndex(1)
                 elif event.key == K_e:
-                    self.updateTime(1)
+                    self.updateTime(0.0006944444444444444)
                 elif event.key == K_q:
-                    self.updateTime(-1)
+                    self.updateTime(-0.0006944444444444444)
                 elif event.key == K_p:
                     self.togglePlanetPlotter()
                 elif event.key == K_m:
