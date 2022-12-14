@@ -40,6 +40,34 @@ class StarSelector:
         start = string.index(symbol) + 1
         end = string.index(symbol, start)
         return string[start:end]
+
+    def selectStarByNameOrId(self, nameOrId, location, time):
+        tempStars = self.df
+        if not nameOrId.isdigit():
+            for code, star in self.nameDict.items():
+                if star == nameOrId:
+                    print(star, code)
+                    starDf = tempStars.loc[code, :]
+
+        starObj = SkyStar.from_dataframe(starDf)
+        #calculate apparent alt az and dist at t from loc
+        apparent = location.at(time).observe(starObj).apparent()
+        alt, az, distance = apparent.altaz()
+        
+        mag = starDf['magnitude']
+        id = int(starDf.name)
+        try:
+            name = self.nameDict[id]
+        except:
+            name = "nan"
+        try:
+            symbol = self.starConstellDict[id]
+            constell = self.constellNameDict[symbol]
+        except:
+            symbol = "nan"
+            constell = "nan"
+        return Star(id, name, constell, symbol, mag, alt, az, distance, starObj)
+
     def selectStarsByConstellations(self, time, location, constellations, starsToMap=[]):
         tempStars = self.df[self.df["magnitude"] <= 12]
         for index, star in tempStars.iterrows():
@@ -138,13 +166,6 @@ class StarSelector:
                 constell = "nan"
             starsToMap.append(Star(id, name, constell, symbol, mag, alt, az, distance, starObj))
         starsToMap.reverse()
-        greatestMagnitude = -70000
-        lowestMagnitude = 80000
-        for star in starsToMap:
-            if star.magnitude > greatestMagnitude:
-                greatestMagnitude = star.magnitude
-            elif star.magnitude < lowestMagnitude:
-                lowestMagnitude = star.magnitude
-        for star in starsToMap:
-            star.normMagnitude = 1-(star.magnitude + abs(lowestMagnitude))/(greatestMagnitude + abs(lowestMagnitude))
+
+        starsToMap = normalizeListMagnitudes(starsToMap)
         return starsToMap

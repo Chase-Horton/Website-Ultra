@@ -208,6 +208,57 @@ class GraphController:
     def toggleMessierPlotter(self):
         self.messierPlotterEnabled = not self.messierPlotterEnabled
         self.refresh()
+    #!TODO: ADD METHOD THAT UPDATES SAVED SEARCH OBJECTS POSITION INSTEAD OF RERUNNING THIS FUNCTION
+    def searchObject(self, name):
+        # first check if it is a planet we are displaying
+        for planet in self.currPlanets:
+            if planet.name == name:
+                print('Found on screen')
+                return planet
+        # then check if it is a planet we are not displaying
+        if name in self.PlanetSelector.planetList:
+            return self.PlanetSelector.getPlanetObj(name, self.time, self.location)
+        # then check if it is a messier object we are displaying
+        for messier in self.currMessier:
+            if messier.NGCNames != None:
+                if name in messier.NGCNames:
+                    print('Found on screen')
+                    return messier
+            if name == messier.MCode:
+                print('Found on screen')
+                return messier
+            if name == messier.NGC:
+                print('Found on screen')
+                return messier
+        # then check if it is a messier object we are not displaying
+        messierObjects = self.MessierSelector.getAllMessierObjects(self.time, self.location)
+        for messier in messierObjects:
+            if messier.NGCNames != None:
+                if name in messier.NGCNames:
+                    return messier
+            if name == messier.MCode:
+                return messier
+            if name == messier.NGC:
+                return messier
+        # now check if the object is a star we are displaying
+        foundStar = None
+        for star in self.currStars:
+            if star.name == name:
+                foundStar = star
+            if star.ID == name:
+                foundStar = star
+                return star
+        if foundStar != None:
+            if foundStar.alt > 0:
+                print('Found on screen')
+                return foundStar
+            else:
+                print('Star is below horizon')
+                return foundStar
+        else:
+            #resolution too low
+            return self.Selector.selectStarByNameOrId(name, self.location, self.time)
+
     def refresh(self):
         #draw graph and lines and labels
         self.GridPlotter.update(self.graphStateIndex)
@@ -226,44 +277,36 @@ class GraphController:
         self.fastDrawStars()
         if self.planetPlotterEnabled:
             self.drawPlanets()
-
-
-
-G = GraphController()
-start = datetime.now()
-G.refresh()
-end = datetime.now()
-print('Time to draw stars: ', end - start)
-while True:
-    pygame.display.update()
-    G.updateInfoText()
-    for event in pygame.event.get():
-        if event.type == KEYDOWN:
-            if event.key == K_ESCAPE:
-                sys.exit()
-            elif event.key == K_w:
-                G.updateFilter(.1)
-            elif event.key == K_s:
-                G.updateFilter(-.1)
-            elif event.key == K_d:
-                G.updateConstellationIndex(1)
-            elif event.key == K_a:
-                G.updateConstellationIndex(-1)
-            elif event.key == K_z:
-                G.updateGraphStateIndex(-1)
-            elif event.key == K_x:
-                G.updateGraphStateIndex(1)
-            elif event.key == K_e:
-                G.updateTime(1)
-            elif event.key == K_q:
-                G.updateTime(-1)
-            elif event.key == K_p:
-                G.togglePlanetPlotter()
-            elif event.key == K_m:
-                G.toggleMessierPlotter()
-        elif event.type == MOUSEBUTTONDOWN:
-            G.fastDrawStars()
-            starOrPlanet = G.findStarOrPlanet(pygame.mouse.get_pos())
-            G.selectStarOrPlanet(starOrPlanet)
+    def handleKeys(self, events):
+        for event in events:
+            if(event.type == KEYDOWN):
+                if event.key == K_ESCAPE:
+                    sys.exit()
+                elif event.key == K_w:
+                    self.updateFilter(.1)
+                elif event.key == K_s:
+                    self.updateFilter(-.1)
+                elif event.key == K_d:
+                    self.updateConstellationIndex(1)
+                elif event.key == K_a:
+                    self.updateConstellationIndex(-1)
+                elif event.key == K_z:
+                    self.updateGraphStateIndex(-1)
+                elif event.key == K_x:
+                    self.updateGraphStateIndex(1)
+                elif event.key == K_e:
+                    self.updateTime(1)
+                elif event.key == K_q:
+                    self.updateTime(-1)
+                elif event.key == K_p:
+                    self.togglePlanetPlotter()
+                elif event.key == K_m:
+                    self.toggleMessierPlotter()
+                elif event.key == K_i:
+                    print(self.searchObject('Sabik').alt)
+            elif event.type == MOUSEBUTTONDOWN:
+                self.fastDrawStars()
+                starOrPlanet = self.findStarOrPlanet(pygame.mouse.get_pos())
+                self.selectStarOrPlanet(starOrPlanet)
 
             

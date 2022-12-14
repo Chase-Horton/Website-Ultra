@@ -65,3 +65,13 @@ class MessierSelector:
                 visibleMessier.append(obj)
         visibleMessier = normalizeListMagnitudes(visibleMessier)
         return visibleMessier
+    #get all messier objects with alt az for time and location
+    def getAllMessierObjects(self, time, location):
+        allMessier = []
+        for obj in self.messierObjects:
+            alt, az = self.getMessierAltAz(obj.MCode, time, location)
+            obj.alt = alt.degrees
+            obj.az = az.degrees
+            allMessier.append(obj)
+        allMessier = normalizeListMagnitudes(allMessier)
+        return allMessier
