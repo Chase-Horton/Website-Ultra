@@ -70,9 +70,9 @@ class GraphController:
     def updateGraphStateIndex(self, i):
         self.graphStateIndex += i
         if self.graphStateIndex < 0:
-            self.graphStateIndex = 0
-        elif self.graphStateIndex > 6:
             self.graphStateIndex = 6
+        elif self.graphStateIndex > 6:
+            self.graphStateIndex = 0
         self.fastRefresh()
     #redraw graph then stars based on state values
     def drawStars(self):
@@ -154,10 +154,10 @@ class GraphController:
                 offset += 40
             return
         else:
+            messier = starOrPlanet
             if messier.alt > 0:
-                messier = starOrPlanet
-            #recolor messier
-            self.GridPlotter.plotPlanet(messier, color)
+                #recolor messier
+                self.GridPlotter.plotPlanet(messier, color)
             #print info
             designation = f'Messier #: {messier.MCode}'
             NGC = f'NGC #: {messier.NGC}'
@@ -167,7 +167,7 @@ class GraphController:
                 name = f'Other Names: {messier.NGCNames}'
             constellation = f'Constellation: {messier.constellation}'
             mType = f'Type: {messier.type}'
-            yearDiscovered = 'Year Discovered: {:,.0f}'.format(messier.yearDiscovered)
+            yearDiscovered = 'Year Discovered: {:.0f}'.format(messier.yearDiscovered)
 
             magnitude = 'Magnitude: {:.2f}'.format(messier.magnitude)
             alt = 'Altitude: {:.2f}°'.format(messier.alt)
@@ -196,19 +196,19 @@ class GraphController:
         self.refresh()
     #update info text
     def updateInfoText(self):
-        label = myfont.render('Showing Stars brighter than Magnitude: {:.1f}'.format(self.filter), 1, (255,255,0))
+        label = myfont.render('Showing Stars brighter than Magnitude: {:.1f}'.format(self.filter), 1, (0,0,255))
         self.screen.blit(label, (2700, 100))
         if self.constellationCatalog[self.constellationCatalogIndex] != 'none':
             constell = self.Selector.constellNameDict[self.constellationCatalog[self.constellationCatalogIndex]]
         else:
             constell = 'None'
-        label = myfont.render(f'Selected Constellation: {constell}', 1, (255,255,0))
+        label = myfont.render(f'Selected Constellation: {constell}', 1, (0,0,255))
         self.screen.blit(label, (2800, 140))
         time = str(str(self.time.astimezone(self.CENTRALTIME)))
         time = time.split(':')
         time = time[:2]
         time = ':'.join(time)
-        label = myfont.render(f'Selected Time CST: {time}', 1, (255,255,0))
+        label = myfont.render(f'Selected Time CST: {time}', 1, (0,0,255))
         self.screen.blit(label, (2900, 180))
     #toggle planet plotter
     def togglePlanetPlotter(self):
@@ -293,6 +293,17 @@ class GraphController:
             self.drawPlanets()
         self.refreshSearchObjectAndData()
         self.refreshSelectedMousePlanet()
+    def handleInput(self, input):
+        #for now only handle search
+        if 'search' == 'search':
+            if input != '':
+                self.selectedSearchObject = self.searchObject(input)
+                self.fastRefresh()
+            else:
+                self.selectedSearchObject = None
+                self.fastRefresh()
+            
+
     def handleKeys(self, events):
         for event in events:
             if(event.type == KEYDOWN):
@@ -306,10 +317,8 @@ class GraphController:
                     self.updateConstellationIndex(1)
                 elif event.key == K_a:
                     self.updateConstellationIndex(-1)
-                elif event.key == K_z:
+                elif event.key == K_TAB:
                     self.updateGraphStateIndex(-1)
-                elif event.key == K_x:
-                    self.updateGraphStateIndex(1)
                 elif event.key == K_e:
                     self.updateTime(0.0006944444444444444)
                 elif event.key == K_q:
@@ -318,9 +327,6 @@ class GraphController:
                     self.togglePlanetPlotter()
                 elif event.key == K_m:
                     self.toggleMessierPlotter()
-                elif event.key == K_i:
-                    self.selectedSearchObject = self.searchObject('Sabik')
-                    self.fastRefresh()
             elif event.type == MOUSEBUTTONDOWN:
                 self.selectedMousePlanet = None
                 self.fastRefresh()

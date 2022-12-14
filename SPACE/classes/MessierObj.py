@@ -2,6 +2,7 @@ class Messier:
     def __init__(self, MCode, NGC, NGCNames, RA, Dec, Mag, distance, Size, Type, Constellation, yearDiscovered, discoverer, imageUrl):
         self.objType = "Messier"
         self.MCode = MCode
+        self.name = MCode
         self.NGC = NGC
         self.NGCNames = NGCNames
         if ":" in RA:

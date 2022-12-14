@@ -43,30 +43,34 @@ class StarSelector:
     #! NEED TO RETURN NONE IF NONE ARE FOUND
     def selectStarByNameOrId(self, nameOrId, location, time):
         tempStars = self.df
+        starDf = None
         if not nameOrId.isdigit():
             for code, star in self.nameDict.items():
                 if star == nameOrId:
                     print(star, code)
                     starDf = tempStars.loc[code, :]
-
-        starObj = SkyStar.from_dataframe(starDf)
-        #calculate apparent alt az and dist at t from loc
-        apparent = location.at(time).observe(starObj).apparent()
-        alt, az, distance = apparent.altaz()
-        
-        mag = starDf['magnitude']
-        id = int(starDf.name)
-        try:
-            name = self.nameDict[id]
-        except:
-            name = "nan"
-        try:
-            symbol = self.starConstellDict[id]
-            constell = self.constellNameDict[symbol]
-        except:
-            symbol = "nan"
-            constell = "nan"
-        return Star(id, name, constell, symbol, mag, alt, az, distance, starObj)
+                    break
+        if starDf != None:
+            starObj = SkyStar.from_dataframe(starDf)
+            #calculate apparent alt az and dist at t from loc
+            apparent = location.at(time).observe(starObj).apparent()
+            alt, az, distance = apparent.altaz()
+            
+            mag = starDf['magnitude']
+            id = int(starDf.name)
+            try:
+                name = self.nameDict[id]
+            except:
+                name = "nan"
+            try:
+                symbol = self.starConstellDict[id]
+                constell = self.constellNameDict[symbol]
+            except:
+                symbol = "nan"
+                constell = "nan"
+            return Star(id, name, constell, symbol, mag, alt, az, distance, starObj)
+        else:
+            return None
 
     def selectStarsByConstellations(self, time, location, constellations, starsToMap=[]):
         tempStars = self.df[self.df["magnitude"] <= 12]
