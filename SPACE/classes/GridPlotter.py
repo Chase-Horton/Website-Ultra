@@ -104,6 +104,9 @@ class GridPlotter:
         for star in list:
             if star.symbol == symbol:
                 color = [0,0,255]
+            #! COLOR SOMETHING IF TOGGLE?
+            elif star.name != "nan":
+                color = [225,255,255]
             else:
                 color = [255,255,255]
             self.plotStar(star, color)

@@ -10,7 +10,8 @@ class pygameController:
 
     def displayInput(self):
         self.G.fastRefresh()
-
+        self.G.updateInfoText()
+        
         font = pygame.font.SysFont("monospace", 32)
         text = font.render(self.promptString + self.currentInput, True, (255, 255, 255))
         self.G.screen.blit(text, (2300, 2128))
