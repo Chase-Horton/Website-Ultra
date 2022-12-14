@@ -11,7 +11,7 @@ class pygameController:
     def displayInput(self):
         self.G.fastRefresh()
         self.G.updateInfoText()
-        
+
         font = pygame.font.SysFont("monospace", 32)
         text = font.render(self.promptString + self.currentInput, True, (255, 255, 255))
         self.G.screen.blit(text, (2300, 2128))
@@ -32,7 +32,6 @@ class pygameController:
             self.G.updateInfoText()
             events = pygame.event.get()
             if self.capturingInput:
-                self.displayInput()
                 for event in events:
                     if event.type == KEYDOWN:
                         if event.key == K_RETURN:
@@ -41,14 +40,17 @@ class pygameController:
                             self.toggleInput()
                         elif event.key == K_BACKSPACE:
                             self.currentInput = self.currentInput[:-1]
+                            self.displayInput()
                         else:
                             self.currentInput += event.unicode
+                            self.displayInput()
             else:
                 start = False
                 for event in events:
                     if event.type == KEYDOWN:
                         if event.key == K_RETURN:
                             self.toggleInput("Enter an objects name: ")
+                            self.displayInput()
                             start = True
                 if not start:
                     self.G.handleKeys(events)

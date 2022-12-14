@@ -160,7 +160,7 @@ class GraphController:
                 self.GridPlotter.plotPlanet(messier, color)
             #print info
             designation = f'Messier #: {messier.MCode}'
-            NGC = f'NGC #: {messier.NGC}'
+            NGC = f'Designation: {messier.NGC}'
             if messier.NGCNames == None:
                 name = 'Other Names: N/A'
             else:
@@ -229,7 +229,7 @@ class GraphController:
         # then check if it is a messier object we are displaying
         for messier in self.currMessier:
             if messier.NGCNames != None:
-                if name in messier.NGCNames:
+                if name in messier.NGCNames and 'M' not in name:
                     return messier
             if name == messier.MCode:
                 return messier
@@ -239,7 +239,7 @@ class GraphController:
         messierObjects = self.MessierSelector.getAllMessierObjects(self.time, self.location)
         for messier in messierObjects:
             if messier.NGCNames != None:
-                if name in messier.NGCNames:
+                if name in messier.NGCNames and 'M' not in name:
                     return messier
             if name == messier.MCode:
                 return messier
