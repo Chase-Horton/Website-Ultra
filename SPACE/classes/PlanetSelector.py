@@ -1,6 +1,7 @@
 from skyfield.api import load, wgs84
 from Planet import Planet
 import pandas as pd
+from util import normalizeListMagnitudes
 class PlanetSelector:
     def __init__(self):
         self.planets = load('de421.bsp')
@@ -53,14 +54,5 @@ class PlanetSelector:
                 planetObj = self.getPlanetObj(planet, time, location)
                 if planetObj.alt > 0:
                     planets.append(planetObj)
-        
-        greatestMagnitude = -70000
-        lowestMagnitude = 80000
-        for planet in planets:
-            if planet.magnitude > greatestMagnitude:
-                greatestMagnitude = planet.magnitude
-            elif planet.magnitude < lowestMagnitude:
-                lowestMagnitude = planet.magnitude
-        for planet in planets:
-            planet.normMagnitude = 1-(planet.magnitude + abs(lowestMagnitude))/(greatestMagnitude + abs(lowestMagnitude)) 
+        planets = normalizeListMagnitudes(planets)
         return planets

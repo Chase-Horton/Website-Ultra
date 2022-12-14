@@ -2,6 +2,7 @@ from skyfield.api import Star as SkyStar
 from Star import Star
 import threading
 import queue
+from util import normalizeListMagnitudes
 class StarSelector:
     def __init__(self, df):
         self.df = df
@@ -65,15 +66,7 @@ class StarSelector:
             except:
                 name = "nan"
             starsToMap.append(Star(id, name, constell, symbol, mag, alt, az, distance, starObj))
-        greatestMagnitude = -70000
-        lowestMagnitude = 80000
-        for star in starsToMap:
-            if star.magnitude > greatestMagnitude:
-                greatestMagnitude = star.magnitude
-            elif star.magnitude < lowestMagnitude:
-                lowestMagnitude = star.magnitude
-        for star in starsToMap:
-            star.normMagnitude = 1-(star.magnitude + abs(lowestMagnitude))/(greatestMagnitude + abs(lowestMagnitude)) 
+        starsToMap = normalizeListMagnitudes(starsToMap)
         return starsToMap
     #select stars by magnitude and return list of star objects using threading and queue
     def selectStarsByMagnitudeWithBatching(self, filter, time, location):
@@ -88,15 +81,7 @@ class StarSelector:
         starsToMap = []
         while not self.queue.empty():
             starsToMap.append(self.queue.get())
-        greatestMagnitude = -70000
-        lowestMagnitude = 80000
-        for star in starsToMap:
-            if star.magnitude > greatestMagnitude:
-                greatestMagnitude = star.magnitude
-            elif star.magnitude < lowestMagnitude:
-                lowestMagnitude = star.magnitude
-        for star in starsToMap:
-            star.normMagnitude = 1-(star.magnitude + abs(lowestMagnitude))/(greatestMagnitude + abs(lowestMagnitude)) 
+        starsToMap = normalizeListMagnitudes(starsToMap)
         return starsToMap
     # batch list of stars for multiprocessing
     def batch(self, l):
