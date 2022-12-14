@@ -134,7 +134,10 @@ class GraphController:
             self.GridPlotter.plotPlanet(planet, [255, 255, 0])
             #print info
             dist = 'Distance: {:,.2f} km '.format(planet.distance.km) + '| {:,.2f} ly'.format(planet.distance.m/9460730472580800)
-            infoLst = [f'Name: {planet.name}', f'Magnitude: {planet.magnitude}', dist,'Azimuth: {:.2f}'.format(planet.az), 'Altitude: {:.2f}'.format(planet.alt)]
+            infoLst = [f'Name: {planet.name}', f'Magnitude: {planet.magnitude}', dist,'Azimuth: {:.2f}'.format(planet.az),
+                'Altitude: {:.2f}'.format(planet.alt), 'Mass: {:,.2f} kg'.format(planet.mass1024*1024), 'Diameter: {:,.2f} km'.format(planet.diameter),
+                 'Density: {:,.2f} kg/m^3'.format(planet.density), 'Gravity: {:,.2f} m/s^2'.format(planet.gravity),
+                  'Average Temperature: {:,.2f} C'.format(planet.avgTemp), 'Number of Moons {}'.format(planet.numMoons)]
             offset = 0
             for txt in infoLst:
                 label = myfont.render(txt, 1, (255,255,0))

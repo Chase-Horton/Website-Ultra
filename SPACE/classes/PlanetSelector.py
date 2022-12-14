@@ -1,5 +1,6 @@
 from skyfield.api import load, wgs84
 from Planet import Planet
+import pandas as pd
 class PlanetSelector:
     def __init__(self):
         self.planets = load('de421.bsp')
@@ -8,11 +9,22 @@ class PlanetSelector:
         self.planetNameList = ['Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune']
         self.selectedPlanets = [1, 2, 4, 5, 6, 7, 8]
         self.planetCodes = {planetKey:self.planets[self.planetList[planetKey]] for planetKey in self.planetList.keys()}
+        self.NASAplanetData = self.loadPlanetData()
+    def loadPlanetData(self):
+        df = pd.read_csv('data/planets', sep='\t')
+        df = df.transpose()
+        df = df.rename(columns=df.iloc[0]).iloc[1:]
+        return df
+    def loadDataForPlanet(self, planetName):
+        CAPSplanetName = planetName.upper()
+        return self.NASAplanetData.loc[CAPSplanetName]
     #get alt and az of planet by name time and location and store in obj
     def getPlanetObj(self, planetName, time, location):
         apparent = location.at(time).observe(self.planetCodes[planetName]).apparent()
         alt, az, distance = apparent.altaz()
-        planetData = Planet(self.planetList[planetName], planetName, alt, az, distance, self.planetMagnitudes[planetName], self.planetCodes[planetName])
+        planetInfo = self.loadDataForPlanet(planetName) 
+        planetData = Planet(self.planetList[planetName], planetName, alt, az, distance, self.planetMagnitudes[planetName], self.planetCodes[planetName], planetInfo['Mass (1024kg) '], planetInfo['Diameter (km) ']
+        , planetInfo['Density (kg/m3) '], planetInfo['Gravity (m/s2) '], planetInfo['Escape Velocity (km/s) '], planetInfo['Rotation Period (hours) '], planetInfo['Mean Temperature (C) '], planetInfo['Number of Moons '], planetInfo['Ring System? '])
         return planetData
     #toggle planet selection by number
     def togglePlanetSelection(self, number):
