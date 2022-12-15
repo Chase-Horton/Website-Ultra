@@ -93,7 +93,7 @@ class ConstellationLine:
         self.pos1 = TwoStars[0]
         self.pos2 = TwoStars[1]
         self.color = (0, 0, 255)
-        self.width = 1
+        self.width = 3
 class Line:
     def __init__(self, pos1, pos2, color, width):
         self.pos1 = pos1

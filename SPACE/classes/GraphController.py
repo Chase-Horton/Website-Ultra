@@ -5,6 +5,8 @@ from PlanetSelector import PlanetSelector
 from MessierSelector import MessierSelector
 from GridPlotter import GridPlotter
 from Models import ConstellationLoader
+
+from Telescope import Telescope
 from pytz import timezone
 import pygame, sys
 from pygame.locals import *
@@ -30,7 +32,7 @@ class GraphController:
         self.constellationCatalog = ['none', 'Ori', 'UMa', 'UMi', 'Dra', 'Cas', 'Cam', 'Cep', 'Gem', 'Aqr', 'Leo', 'Sco', 'CMa',
          'And', 'Peg', 'Aur', 'Cyg', 'Cnc', 'Lyr', 'Vir', 'Boo']
         self.constellationCatalogIndex = 0
-        self.filter = 5
+        self.filter = 8
         #CONST
         self.CENTRALTIME = timezone('US/Central')
         size = 3840, 2160
@@ -83,6 +85,45 @@ class GraphController:
         elif self.graphStateIndex > 6:
             self.graphStateIndex = 0
         self.fastRefresh()
+    def emulateTelescopeAtActiveStar(self, telescopeAperature=150, telescopeFocalLength=750, eyepieceFocalLength=25, eyepieceAFOV=60):
+        T = Telescope(telescopeAperature, telescopeFocalLength)
+        altOfObj = self.selectedMousePlanet.alt
+        azOfObj = self.selectedMousePlanet.az
+        altAzRangeOfEyepiece = T.calculateFOVAltAzRanges(eyepieceFocalLength, eyepieceAFOV, altOfObj, azOfObj)
+        r = (altAzRangeOfEyepiece[0][1]-altAzRangeOfEyepiece[0][0])*math.sqrt(self.GridPlotter.PPI)/2
+        pygame.draw.circle(self.screen, [255,0,0], self.selectedMousePlanet.loc, r, 1)
+        telescopeVisibleStarList = self.selectAllActiveObjectsFromRange(altAzRangeOfEyepiece)[0]
+        for obj in telescopeVisibleStarList:
+            self.GridPlotter.plotStar(obj, [255,0,0])
+    def zoomTelescopeAtActiveStar(self, telescopeAperature=150, telescopeFocalLength=750, eyepieceFocalLength=25, eyepieceAFOV=60):
+        T = Telescope(telescopeAperature, telescopeFocalLength)
+        altOfObj = self.selectedMousePlanet.alt
+        azOfObj = self.selectedMousePlanet.az
+        altAzRangeOfEyepiece = T.calculateFOVAltAzRanges(eyepieceFocalLength, eyepieceAFOV, altOfObj, azOfObj)
+        telescopeVisibleStarList = self.selectAllActiveObjectsFromRange(altAzRangeOfEyepiece)[0]
+        magnification = T.calculateMagnification(eyepieceFocalLength)
+        fov = T.calculateFOV(eyepieceFocalLength, eyepieceAFOV)
+        T.plotListOfStarsScaled(self.graphStateIndex, self.GridPlotter, telescopeVisibleStarList, fov, magnification, self.selectedMousePlanet)
+
+
+    #select all stars, planets, or messier objects in alt az range
+    def selectAllActiveObjectsFromRange(self, altAzRanges):
+        altRange = altAzRanges[0]
+        azRange = altAzRanges[1]
+        visibleStars = []
+        visiblePlanets = []
+        visibleMessierObjects = []
+        for star in self.currStars:
+            if star.alt >= altRange[0] and star.alt <= altRange[1] and star.az >= azRange[0] and star.az <= azRange[1]:
+                visibleStars.append(star)
+        for planet in self.currPlanets:
+            if planet.alt >= altRange[0] and planet.alt <= altRange[1] and planet.az >= azRange[0] and planet.az <= azRange[1]:
+                visiblePlanets.append(planet)
+        for messierObject in self.currMessier:
+            if messierObject.alt >= altRange[0] and messierObject.alt <= altRange[1] and messierObject.az >= azRange[0] and messierObject.az <= azRange[1]:
+                visibleMessierObjects.append(messierObject)
+        return visibleStars, visiblePlanets, visibleMessierObjects
+        
     #redraw graph then stars based on state values
     def drawStars(self):
         #!selection magnitude add more options later
@@ -132,14 +173,15 @@ class GraphController:
             self.screen.blit(label, position)
             return
         elif starOrPlanet.objType == 'star':
-            currClip = pyperclip.paste()
+            #! REMOVE THIS
+            """currClip = pyperclip.paste()
             newClip = currClip + ',' + str(starOrPlanet.ID)
             if len(newClip.split(',')) > 2:
                 newClip = newClip.split(',')[2]
                 print('new clip: ' + newClip)
             elif len(newClip.split(',')) == 2:
                 print('ready to paste\n')
-            pyperclip.copy(newClip)
+            pyperclip.copy(newClip) """
             star = starOrPlanet
             #recolor star
             self.GridPlotter.plotStar(star, color)
@@ -369,6 +411,12 @@ class GraphController:
                     self.toggleMessierPlotter()
                 elif event.key == K_c:
                     self.toggleConstellationLines()
+                elif event.key == K_t:
+                    self.emulateTelescopeAtActiveStar()
+                elif event.key == K_z:
+                    self.zoomTelescopeAtActiveStar()
+                elif event.key == ord('`'):
+                    self.fastRefresh()
             elif event.type == MOUSEBUTTONDOWN:
                 self.selectedMousePlanet = None
                 self.fastRefresh()

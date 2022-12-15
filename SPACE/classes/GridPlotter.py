@@ -63,9 +63,16 @@ class GridPlotter:
             pygame.draw.line(self.screen, self.graphColor, ang[0], ang[1])
             ang = self.calcPointOnCircleAndOpp(math.radians(165), self.PPI*5)
             pygame.draw.line(self.screen, self.graphColor, ang[0], ang[1])
-    def plotLabels(self, state):
+    def plotLabels(self, state, star=None):
         #AZIMUTH
         #label wide rotations EW
+        if star != None:
+            if star.name != 'nan':
+                northLabel = f'0° N relative to {star.name}'
+            elif star.name == 'nan':
+                northLabel = f'0° N relative to {star.ID}'
+        else:
+            northLabel = '0° N'
         if state > 4:
             ang = self.calcPointOnCircleAndOpp(0, self.PPI*9)
 
@@ -80,7 +87,7 @@ class GridPlotter:
             label = myfont.render('180° S', 1, (255,255,0))
             self.screen.blit(label, (ang[0][0]-8, ang[0][1]))
 
-            label = myfont.render('0° N', 1, (255,255,0))
+            label = myfont.render(northLabel, 1, (255,255,0))
             self.screen.blit(label, (ang[1][0], ang[1][1]-40))
         #ALTITUDE
         if state > 5:

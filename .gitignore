@@ -5,3 +5,4 @@ SPACE/classes/GraphController.py
 SPACE/classes/PlanetSelector.py
 SPACE/classes/__pycache__/PlanetSelector.cpython-310.pyc
 SPACE/classes/__pycache__/StarSelector.cpython-310.pyc
+SPACE/classes/data/__pycache__/Star.cpython-310.pyc
