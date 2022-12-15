@@ -9,6 +9,10 @@ from pytz import timezone
 import pygame, sys
 from pygame.locals import *
 import math
+
+#temp
+import pyperclip
+#temp
 pygame.init()
 myfont = pygame.font.SysFont("monospace", 32)
 class GraphController:
@@ -23,9 +27,10 @@ class GraphController:
         self.planetPlotterEnabled = False
         self.messierPlotterEnabled = False
         self.graphStateIndex = 6
-        self.constellationCatalog = ['none', 'Ori', 'UMa', 'UMi', 'Dra', 'Cas']
+        self.constellationCatalog = ['none', 'Ori', 'UMa', 'UMi', 'Dra', 'Cas', 'Cam', 'Cep', 'Gem', 'Aqr', 'Leo', 'Sco', 'CMa',
+         'And', 'Peg', 'Aur', 'Cyg', 'Cnc', 'Lyr', 'Vir', 'Boo']
         self.constellationCatalogIndex = 0
-        self.filter = 2.5
+        self.filter = 5
         #CONST
         self.CENTRALTIME = timezone('US/Central')
         size = 3840, 2160
@@ -127,6 +132,14 @@ class GraphController:
             self.screen.blit(label, position)
             return
         elif starOrPlanet.objType == 'star':
+            currClip = pyperclip.paste()
+            newClip = currClip + ',' + str(starOrPlanet.ID)
+            if len(newClip.split(',')) > 2:
+                newClip = newClip.split(',')[2]
+                print('new clip: ' + newClip)
+            elif len(newClip.split(',')) == 2:
+                print('ready to paste\n')
+            pyperclip.copy(newClip)
             star = starOrPlanet
             #recolor star
             self.GridPlotter.plotStar(star, color)
@@ -347,7 +360,7 @@ class GraphController:
                 elif event.key == K_TAB:
                     self.updateGraphStateIndex(-1)
                 elif event.key == K_e:
-                    self.updateTime(0.0006944444444444444)
+                    self.updateTime(0.0006944444444444444*180)
                 elif event.key == K_q:
                     self.updateTime(-0.0006944444444444444)
                 elif event.key == K_p:
