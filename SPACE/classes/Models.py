@@ -23,12 +23,17 @@ class ConstellationLoader:
         #printed loaded lines
         #print(self.df)
         lines = []
+        name = None
+        symbol = None
         #for row in dataframe, if name or symbol matches constellation name, add linepair to "lines"
         for i, row in self.df.iterrows():
             if row['name'] == nameOrSymbol or row['symbol'] == nameOrSymbol:
                 name = row['name']
                 symbol = row['symbol']
                 lines.append([row['star1ID'], row['star2ID']])
+        #if no name or symbol, return None
+        if name == None or symbol == None:
+            return None
         #for each linepair, add id to "starsToLoad" if not already in list
         starsToLoad = []
         for starPair in lines:
@@ -36,7 +41,9 @@ class ConstellationLoader:
                 starsToLoad.append(starPair[0])
             if starPair[1] not in starsToLoad:
                 starsToLoad.append(starPair[1])
-        
+        #if no stars to load, return None
+        if len(starsToLoad) == 0:
+            return None
         #for each star in "starsToLoad", find star in "visibleStars" and add starPos to "starPosDict"
         starPosDict = {}
         for starID in starsToLoad:
@@ -45,6 +52,9 @@ class ConstellationLoader:
                     if visibleStar.alt > 0:
                         starPos = visibleStar.loc
                         starPosDict[starID] = starPos
+        #if no visible stars, return None
+        if len(starPosDict) == 0:
+            return None
         #for each linepair, if both stars are in "starPosDict", add line to "lines"
         visibleLines = []
         for starPair in lines:
@@ -58,6 +68,19 @@ class ConstellationLoader:
         #return constellation with name, symbol, and lines
         return Constellation(name, symbol, visibleLines)
 
+    def loadAllVisibleConstellations(self, visibleStars):
+        names = []
+        for i, row in self.df.iterrows():
+            if row['name'] not in names:
+                names.append(row['name'])
+        constellations = []
+        for name in names:
+            constellation = self.loadConstellationWithPosFromDf(name, visibleStars)
+            if constellation != None:
+                constellations.append(constellation)
+        if len(constellations) == 0:
+            return None
+        return constellations
 
 class Constellation:
     def __init__(self, name, symbol, lines):

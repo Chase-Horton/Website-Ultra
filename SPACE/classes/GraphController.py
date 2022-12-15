@@ -19,7 +19,7 @@ class GraphController:
         self.currPlanets = []
         self.currStars = []
         self.currMessier = []
-        self.currConstellationObj = None
+        self.currConstellationIndex = 0
         self.planetPlotterEnabled = False
         self.messierPlotterEnabled = False
         self.graphStateIndex = 6
@@ -185,18 +185,27 @@ class GraphController:
                 offset += 40
             return
     #if self.currConstellationObj != None, then load constellation from name or symbol, else remove constellation
-    def toggleConstellationLines(self, nameOrSymbol="UMa"):
-        if self.currConstellationObj != None:
-            self.currConstellationObj = None
+    def toggleConstellationLines(self):
+        if self.currConstellationIndex == 0:
+            self.currConstellationIndex = 1
+        elif self.currConstellationIndex == 1:
+            self.currConstellationIndex = 2
         else:
-            self.currConstellationObj = self.ConstellationLoader.loadConstellationWithPosFromDf(nameOrSymbol, self.currStars)
+            self.currConstellationIndex = 0
         self.fastRefresh()
     #draw lines on screen for constellation from self.currConstellationObj
     def drawConstellationLines(self):
-        if self.currConstellationObj != None:
-            self.currConstellationObj = self.ConstellationLoader.loadConstellationWithPosFromDf(self.currConstellationObj.symbol, self.currStars)
-            for line in self.currConstellationObj.lines:
-                pygame.draw.line(self.screen, line.color, line.pos1, line.pos2, line.width)
+        if self.currConstellationIndex == 2:
+            currConstellationsListObj = self.ConstellationLoader.loadAllVisibleConstellations(self.currStars)
+            if currConstellationsListObj != None:
+                for constellation in currConstellationsListObj:
+                    for line in constellation.lines:
+                        pygame.draw.line(self.screen, line.color, line.pos1, line.pos2, line.width)
+        elif self.currConstellationIndex == 1:
+            currConstellationObj = self.ConstellationLoader.loadConstellationWithPosFromDf(self.constellationCatalog[self.constellationCatalogIndex], self.currStars)
+            if currConstellationObj != None:
+                for line in currConstellationObj.lines:
+                    pygame.draw.line(self.screen, line.color, line.pos1, line.pos2, line.width)
     # update location with new lat long
     def updateLocation(self, lat, long ,elev=0):
         self.location = self.earth + wgs84.latlon(lat, long, elev)
