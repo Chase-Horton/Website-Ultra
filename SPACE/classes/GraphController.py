@@ -4,6 +4,7 @@ from StarSelector import StarSelector
 from PlanetSelector import PlanetSelector
 from MessierSelector import MessierSelector
 from GridPlotter import GridPlotter
+from Models import ConstellationLoader
 from pytz import timezone
 import pygame, sys
 from pygame.locals import *
@@ -18,6 +19,7 @@ class GraphController:
         self.currPlanets = []
         self.currStars = []
         self.currMessier = []
+        self.currConstellationObj = None
         self.planetPlotterEnabled = False
         self.messierPlotterEnabled = False
         self.graphStateIndex = 6
@@ -47,6 +49,8 @@ class GraphController:
         self.Selector = StarSelector(self.df)
         self.PlanetSelector = PlanetSelector()
         self.MessierSelector = MessierSelector()
+        #obj to load constellations
+        self.ConstellationLoader = ConstellationLoader()
         #create grid controller
         self.GridPlotter = GridPlotter(self.screen, 115)
     #select stars filtering by selected magnitude
@@ -180,8 +184,19 @@ class GraphController:
                 self.screen.blit(label, (position[0], position[1] + offset))
                 offset += 40
             return
-            
-            
+    #if self.currConstellationObj != None, then load constellation from name or symbol, else remove constellation
+    def toggleConstellationLines(self, nameOrSymbol="UMa"):
+        if self.currConstellationObj != None:
+            self.currConstellationObj = None
+        else:
+            self.currConstellationObj = self.ConstellationLoader.loadConstellationWithPosFromDf(nameOrSymbol, self.currStars)
+        self.fastRefresh()
+    #draw lines on screen for constellation from self.currConstellationObj
+    def drawConstellationLines(self):
+        if self.currConstellationObj != None:
+            self.currConstellationObj = self.ConstellationLoader.loadConstellationWithPosFromDf(self.currConstellationObj.symbol, self.currStars)
+            for line in self.currConstellationObj.lines:
+                pygame.draw.line(self.screen, line.color, line.pos1, line.pos2, line.width)
     # update location with new lat long
     def updateLocation(self, lat, long ,elev=0):
         self.location = self.earth + wgs84.latlon(lat, long, elev)
@@ -276,6 +291,8 @@ class GraphController:
             self.drawMessier()
         #draw stars over messier
         self.drawStars()
+        #draw constellation lines over stars if there is a constellation obj selected
+        self.drawConstellationLines()
         #draw planets over stars
         if self.planetPlotterEnabled:
             self.drawPlanets()
@@ -289,6 +306,7 @@ class GraphController:
         if self.messierPlotterEnabled:
             self.drawMessier()
         self.fastDrawStars()
+        self.drawConstellationLines()
         if self.planetPlotterEnabled:
             self.drawPlanets()
         self.refreshSearchObjectAndData()
@@ -327,6 +345,8 @@ class GraphController:
                     self.togglePlanetPlotter()
                 elif event.key == K_m:
                     self.toggleMessierPlotter()
+                elif event.key == K_c:
+                    self.toggleConstellationLines()
             elif event.type == MOUSEBUTTONDOWN:
                 self.selectedMousePlanet = None
                 self.fastRefresh()

@@ -1,11 +1,16 @@
-from skyfield.api import Star as SkyStar
+from skyfield.api import Star as SkyStar, load
+from skyfield.data import hipparcos
 from data.Star import Star
 import threading
 import queue
 from util import normalizeListMagnitudes
 class StarSelector:
-    def __init__(self, df):
+    def __init__(self, df=None):
         self.df = df
+        if isinstance(df, type(None)):
+            with load.open(hipparcos.URL) as f:
+                self.df = hipparcos.load_dataframe(f)
+            self.df = self.df[self.df['ra_degrees'].notnull()] 
         starNames = open('./data/stars', 'r', encoding="utf-8")
         constNames = open('./data/constellations', 'r', encoding="utf-8")
         constStars = open('./data/constellationship', 'r', encoding='utf-8')
@@ -43,14 +48,15 @@ class StarSelector:
     #! NEED TO RETURN NONE IF NONE ARE FOUND
     def selectStarByNameOrId(self, nameOrId, location, time):
         tempStars = self.df
-        starDf = None
-        if not nameOrId.isdigit():
+        starDf = []
+        if not str(nameOrId).isdigit():
             for code, star in self.nameDict.items():
                 if star == nameOrId:
-                    print(star, code)
                     starDf = tempStars.loc[code, :]
                     break
-        if starDf != None:
+        elif str(nameOrId).isdigit():
+            starDf = self.df.loc[int(nameOrId), :]
+        if len(starDf) > 0:
             starObj = SkyStar.from_dataframe(starDf)
             #calculate apparent alt az and dist at t from loc
             apparent = location.at(time).observe(starObj).apparent()

@@ -4,7 +4,11 @@ class Messier:
         self.MCode = MCode
         self.name = MCode
         self.NGC = NGC
+        if not isinstance(self.NGC, str):
+            self.NGC = None
         self.NGCNames = NGCNames
+        if self.NGCNames != None and self.NGC != None:
+            self.NGCNames = self.NGCNames.replace(self.NGC + " ", "")
         if ":" in RA:
             self.ra = [float(item) for item in RA.split(':')]
             self.dec = [float(item) for item in Dec.split(':')]
