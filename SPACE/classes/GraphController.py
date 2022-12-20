@@ -20,6 +20,11 @@ myfont = pygame.font.SysFont("monospace", 32)
 class GraphController:
     def __init__(self):
         #STATEFUL
+        self.TELESCOPE_MODE = False
+        self.CURRENT_TELESCOPE = None
+        self.CURRENT_ZOOM_OBJ = None
+        self.CURRENT_EYEPIECE = None
+
         self.selectedSearchObject = None
         self.selectedMousePlanet = None
         self.currPlanets = []
@@ -32,7 +37,7 @@ class GraphController:
         self.constellationCatalog = ['none', 'Ori', 'UMa', 'UMi', 'Dra', 'Cas', 'Cam', 'Cep', 'Gem', 'Aqr', 'Leo', 'Sco', 'CMa',
          'And', 'Peg', 'Aur', 'Cyg', 'Cnc', 'Lyr', 'Vir', 'Boo']
         self.constellationCatalogIndex = 0
-        self.filter = 8
+        self.filter = 3
         #CONST
         self.CENTRALTIME = timezone('US/Central')
         size = 3840, 2160
@@ -96,15 +101,27 @@ class GraphController:
         for obj in telescopeVisibleStarList:
             self.GridPlotter.plotStar(obj, [255,0,0])
     def zoomTelescopeAtActiveStar(self, telescopeAperature=150, telescopeFocalLength=750, eyepieceFocalLength=25, eyepieceAFOV=60):
-        T = Telescope(telescopeAperature, telescopeFocalLength)
-        altOfObj = self.selectedMousePlanet.alt
-        azOfObj = self.selectedMousePlanet.az
-        altAzRangeOfEyepiece = T.calculateFOVAltAzRanges(eyepieceFocalLength, eyepieceAFOV, altOfObj, azOfObj)
-        telescopeVisibleStarList = self.selectAllActiveObjectsFromRange(altAzRangeOfEyepiece)[0]
-        magnification = T.calculateMagnification(eyepieceFocalLength)
-        fov = T.calculateFOV(eyepieceFocalLength, eyepieceAFOV)
-        T.plotListOfStarsScaled(self.graphStateIndex, self.GridPlotter, telescopeVisibleStarList, fov, magnification, self.selectedMousePlanet)
+        if not self.TELESCOPE_MODE:
+            self.TELESCOPE_MODE = True
+            self.CURRENT_TELESCOPE = Telescope(telescopeAperature, telescopeFocalLength)
+            self.CURRENT_ZOOM_OBJ = self.selectedMousePlanet
+            self.CURRENT_EYEPIECE = [eyepieceFocalLength, eyepieceAFOV]
+            self.refreshTelescope()
+        else:
+            self.TELESCOPE_MODE = False
+            self.CURRENT_TELESCOPE = None
+            self.CURRENT_ZOOM_OBJ = None
+            self.CURRENT_EYEPIECE = None
+            self.fastRefresh()
 
+    def refreshTelescope(self):
+        altOfObj = self.CURRENT_ZOOM_OBJ.alt
+        azOfObj = self.CURRENT_ZOOM_OBJ.az
+        altAzRangeOfEyepiece = self.CURRENT_TELESCOPE.calculateFOVAltAzRanges(self.CURRENT_EYEPIECE[0], self.CURRENT_EYEPIECE[1], altOfObj, azOfObj)
+        telescopeVisibleStarList = self.selectAllActiveObjectsFromRange(altAzRangeOfEyepiece)[0]
+        magnification = self.CURRENT_TELESCOPE.calculateMagnification(self.CURRENT_EYEPIECE[0])
+        fov = self.CURRENT_TELESCOPE.calculateFOV(self.CURRENT_EYEPIECE[0], self.CURRENT_EYEPIECE[1])
+        self.CURRENT_TELESCOPE.plotListOfStarsScaled(self.graphStateIndex, self.GridPlotter, telescopeVisibleStarList, fov, magnification, self.selectedMousePlanet)
 
     #select all stars, planets, or messier objects in alt az range
     def selectAllActiveObjectsFromRange(self, altAzRanges):
@@ -128,18 +145,15 @@ class GraphController:
     def drawStars(self):
         #!selection magnitude add more options later
         if "mag" == "mag":
-            self.currStars = self.selectStarsByMag()
             self.GridPlotter.plotStarList(self.currStars, self.constellationCatalog[self.constellationCatalogIndex])
         #selection constellation
         elif "byConst" == "TBA":
             pass
     #draw planets 
     def drawPlanets(self):
-        self.currPlanets = self.PlanetSelector.getVisiblePlanets(self.time, self.location)
         self.GridPlotter.plotPlanetList(self.currPlanets)
     #draw messier objects
     def drawMessier(self):
-        self.currMessier = self.MessierSelector.getVisibleMessierObjects(self.time, self.location)
         self.GridPlotter.plotMessierList(self.currMessier)  
     #draw stars with threading
     def drawStarsWithThread(self):
@@ -273,6 +287,13 @@ class GraphController:
     def updateTime(self, i):
         self.time += i
         self.refresh()
+    #generate an objects orbit at time interval
+    def generateOrbit(self, object, i, timeInterval):
+        x = 0
+        time = self.time
+        while x < i:
+            #here
+            pass
     #update info text
     def updateInfoText(self):
         label = myfont.render('Showing Stars brighter than Magnitude: {:.1f}'.format(self.filter), 1, (0,0,255))
@@ -349,32 +370,54 @@ class GraphController:
             self.selectedMousePlanet = newObj
             self.selectStarOrPlanet(self.selectedMousePlanet)
     def refresh(self):
-        #draw graph and lines and labels
-        self.GridPlotter.update(self.graphStateIndex)
-        if self.messierPlotterEnabled:
-            self.drawMessier()
-        #draw stars over messier
-        self.drawStars()
-        #draw constellation lines over stars if there is a constellation obj selected
-        self.drawConstellationLines()
-        #draw planets over stars
-        if self.planetPlotterEnabled:
-            self.drawPlanets()
-        #draw search object over planets
-        self.refreshSearchObjectAndData()
-        #draw selected mouse planet over search objects
-        self.refreshSelectedMousePlanet()
+        #refresh star locations
+        self.currStars = self.selectStarsByMag()
+        if not self.TELESCOPE_MODE:
+            #draw graph and lines and labels
+            self.GridPlotter.update(self.graphStateIndex)
+            if self.messierPlotterEnabled:
+                self.currMessier = self.MessierSelector.getVisibleMessierObjects(self.time, self.location)
+                self.drawMessier()
+            #draw stars over messier
+            self.drawStars()
+            #draw constellation lines over stars if there is a constellation obj selected
+            self.drawConstellationLines()
+            #draw planets over stars
+            if self.planetPlotterEnabled:
+                self.currPlanets = self.PlanetSelector.getVisiblePlanets(self.time, self.location)
+                self.drawPlanets()
+            #draw search object over planets
+            self.refreshSearchObjectAndData()
+            #draw selected mouse planet over search objects
+            self.refreshSelectedMousePlanet()
+        else:
+            #if telescope mode
+            if self.planetPlotterEnabled:
+                self.currPlanets = self.PlanetSelector.getVisiblePlanets(self.time, self.location)
+            if self.messierPlotterEnabled:
+                self.currMessier = self.MessierSelector.getVisibleMessierObjects(self.time, self.location)
+            self.refreshTelescope()
     def fastRefresh(self):
-        #draw graph and lines and labels
-        self.GridPlotter.update(self.graphStateIndex)
-        if self.messierPlotterEnabled:
-            self.drawMessier()
-        self.fastDrawStars()
-        self.drawConstellationLines()
-        if self.planetPlotterEnabled:
-            self.drawPlanets()
-        self.refreshSearchObjectAndData()
-        self.refreshSelectedMousePlanet()
+        if not self.TELESCOPE_MODE:
+            #draw graph and lines and labels
+            self.GridPlotter.update(self.graphStateIndex)
+            if self.messierPlotterEnabled:
+                self.currMessier = self.MessierSelector.getVisibleMessierObjects(self.time, self.location)
+                self.drawMessier()
+            self.fastDrawStars()
+            self.drawConstellationLines()
+            if self.planetPlotterEnabled:
+                self.currPlanets = self.PlanetSelector.getVisiblePlanets(self.time, self.location)
+                self.drawPlanets()
+            self.refreshSearchObjectAndData()
+            self.refreshSelectedMousePlanet()
+        else:
+            #if telescope mode DEFINITELY BROKEN AS FUCK
+            if self.planetPlotterEnabled:
+                self.currPlanets = self.PlanetSelector.getVisiblePlanets(self.time, self.location)
+            if self.messierPlotterEnabled:
+                self.currMessier = self.MessierSelector.getVisibleMessierObjects(self.time, self.location)
+            self.refreshTelescope()
     def handleInput(self, input):
         #for now only handle search
         if 'search' == 'search':
